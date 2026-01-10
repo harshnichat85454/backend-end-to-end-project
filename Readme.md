@@ -1,1 +1,1 @@
-this is my first backend project to learn backend 
+this is my first backend project to understand backend 
