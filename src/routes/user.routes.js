@@ -1,6 +1,7 @@
 import { Router} from "express" ;
-import { registerUser } from "../controllers/user.controller.js";
-import {upload} from "../middlewares/multer.middleware.js"
+import { registerUser , loginUser , logoutUser} from "../controllers/user.controller.js";
+import {upload} from "../middlewares/multer.middleware.js";
+import { verifyJWT } from "../middlewares/auth.middleware.js";
 
 const router = Router();
 
@@ -15,11 +16,10 @@ router.route("/register")
         name:"coverImage",
         maxCount:1
     }
-    ]),registerUser)
+    ]),registerUser);
 
-    console.log({
-    registerUser,
-    type: typeof registerUser
-});
+router.route("/login").post(upload.none(),loginUser);
+router.route("/logout").post(verifyJWT,logoutUser);
+
 
 export default router ;
