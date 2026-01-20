@@ -5,8 +5,14 @@ import { User } from "../models/users.model.js";
 
 const verifyJWT = asyncHandler(async (req,res,next) => {
     try {
-        const token = req.cookies?.accessToken || req.header("Authorization").replace("Bearer","");
-        //console.log("token:",token);
+        const token =
+        req.cookies?.accessToken ||
+        req.header("Authorization")?.replace("Bearer ", "");
+
+        if (!token || token === "undefined") {
+        throw new ApiError(401, "Access token missing");
+        }
+
 
         if(!token){
             throw new ApiError(400,"token are required");
