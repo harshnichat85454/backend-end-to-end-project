@@ -15,11 +15,13 @@ app.use(express.static("public"))
 app.use(cookieParser());
 
 //routes
-import userRouter from "./routes/user.routes.js"
+import userRouter from "./routes/user.routes.js";
+import videoRouter from "./routes/video.routes.js";
 
 
 //routes declaration
-app.use("/api/v1/user" , userRouter)
+app.use("/api/v1/user" , userRouter);
+app.use("/api/v1/video",videoRouter);
 // urls will be generated as =>  http://localhost:8000/api/v1/user/register
 
 
