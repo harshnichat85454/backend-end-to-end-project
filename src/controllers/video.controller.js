@@ -3,11 +3,99 @@ import {ApiError} from "../utils/ApiError.js";
 import { uploadOnCloudinary } from "../utils/cloudinary.js";
 import { Video }  from "../models/videos.model.js"
 import { ApiResponse } from "../utils/ApiResponse.js";
+import mongoose from "mongoose";
 
 
 // getVideos , publishAVideo ,getVideoById , updateVideo , deleteVideo , togglePublishStatus
 
 const getVideos = asyncHandler(async (req,res) => {
+    const {
+        page = 1 ,
+        limit = 10,
+        query,
+        sortBy = "createdAt",
+        sortType = "desc",
+        userId
+    } = req.query ;
+
+    const pageNumber = Math.max(parseInt(page,10),1);
+    const limitNumber = Math.min(parseInt(limit,10),50);
+    const skip = (pageNumber-1)*limitNumber;
+
+    const match = {
+        isPublished: true
+    };
+
+    if(query) {
+        match.$or = [
+            {title: { $regex : query , $options: "i"}},
+            {description: {$regex: query , $options: "i"}}
+        ];
+    }
+
+    if(userId) {
+        match.owner = new mongoose.Types.ObjectId(userId);
+    }
+
+    const sort = {
+        [sortBy]: sortType === "asc" ? 1 : -1
+    };
+
+    const videos = await Video.aggregate([
+        {$match:match},
+        {
+            $lookup:{
+                from: "users",
+                localField:"owner",
+                foreignField:"_id",
+                as:"owner"
+            }
+        },
+        {
+            $unwind: "$owner"
+        },
+        {
+            $project:{
+                title:1,
+                description:1,
+                thumbnail:1,
+                videoFile:1,
+                views:1,
+                duration:1,
+                createdAt:1,
+                owner:{
+                    _id:1,
+                    userName:1,
+                    fullName:1,
+                    avatar:1
+                }
+            }
+        },
+        { $sort: sort },
+        { $skip: skip },
+        { $limit: limitNumber }
+    ]);
+
+    const totalVideos = await Video.countDocuments(match);
+
+    return res
+        .status(200)
+        .json(
+            new ApiResponse(
+                200,
+                {
+                    videos,
+                    pagination: {
+                        total: totalVideos,
+                        page: pageNumber,
+                        limit: limitNumber,
+                        totalPages: Math.ceil(totalVideos/ limitNumber)
+                    }
+                },
+                "videos fetched successfully"
+            )
+        )
+
 
 });
 
