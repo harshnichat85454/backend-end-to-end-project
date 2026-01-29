@@ -18,7 +18,8 @@ const playlistSchema = new mongoose.Schema({
         {
             type: mongoose.Schema.Types.ObjectId,
             ref: "Video",
-            index: true
+            index: true,
+            unique:true
         }
     ]
 },{timestamps:true})
