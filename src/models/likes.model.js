@@ -19,6 +19,10 @@ const likeSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: "Tweet"
     }
-},{timestamps:true})
+},{timestamps:true});
+
+likeSchema.index({ likedBy: 1, video: 1 });
+likeSchema.index({ createdAt: -1 });
+
 
 export const Like = mongoose.model("Like",likeSchema);

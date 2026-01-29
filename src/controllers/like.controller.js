@@ -134,8 +134,102 @@ const toggleTweetLike = asyncHandler(async (req,res) => {
         )
 })
 
-const getLikedVideos = asyncHandler(async (req,res) => {
+const getLikedVideos = asyncHandler(async (req, res) => {
+    const userId = req.user._id;
 
-})
+    if (!mongoose.Types.ObjectId.isValid(userId)) {
+        throw new ApiError(400, "Invalid userId");
+    }
+
+    const { page = 1, limit = 10 } = req.query;
+
+    const pageNumber = Math.max(parseInt(page, 10), 1);
+    const limitNumber = Math.min(parseInt(limit, 10), 50);
+    const skip = (pageNumber - 1) * limitNumber;
+
+    const likedVideos = await Like.aggregate([
+        {
+            $match: {
+                likedBy: new mongoose.Types.ObjectId(userId),
+                video: { $ne: null }
+            }
+        },
+
+        { $sort: { createdAt: -1 } },
+
+        { $skip: skip },
+        { $limit: limitNumber },
+
+        {
+            $lookup: {
+                from: "videos",
+                localField: "video",
+                foreignField: "_id",
+                as: "video"
+            }
+        },
+        { $unwind: "$video" },
+
+        {
+            $lookup: {
+                from: "users",
+                localField: "video.owner",
+                foreignField: "_id",
+                as: "owner"
+            }
+        },
+        {
+            $unwind: {
+                path: "$owner",
+                preserveNullAndEmptyArrays: true
+            }
+        },
+
+        {
+            $project: {
+                _id: 0,
+                likedAt: "$createdAt",
+                video: {
+                    _id: "$video._id",
+                    title: "$video.title",
+                    description: "$video.description",
+                    thumbnail: "$video.thumbnail",
+                    videoFile: "$video.videoFile",
+                    views: "$video.views",
+                    duration: "$video.duration",
+                    createdAt: "$video.createdAt",
+                    owner: {
+                        _id: "$owner._id",
+                        userName: "$owner.userName",
+                        fullName: "$owner.fullName",
+                        avatar: "$owner.avatar"
+                    }
+                }
+            }
+        }
+    ]);
+
+    const totalLikedVideos = await Like.countDocuments({
+        likedBy: userId,
+        video: { $ne: null }
+    });
+
+    return res.status(200).json(
+        new ApiResponse(
+            200,
+            {
+                videos: likedVideos,
+                pagination: {
+                    total: totalLikedVideos,
+                    page: pageNumber,
+                    limit: limitNumber,
+                    totalPages: Math.ceil(totalLikedVideos / limitNumber)
+                }
+            },
+            "Liked videos fetched successfully"
+        )
+    );
+});
+
 
 export {toggleCommentike , toggleTweetLike , toggleVideoLike , getLikedVideos};
