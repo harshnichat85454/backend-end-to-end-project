@@ -36,6 +36,7 @@ const videoSchema = new Schema({
 },{timestamps:true})
 
 videoSchema.plugin(mongooseAggregatePaginate)
-videoSchema.index({ owner: 1 });
+videoSchema.index({ owner: 1, isPublished: 1, createdAt: -1 });
+
 
 export const  Video = mongoose.model("Video" ,videoSchema);
