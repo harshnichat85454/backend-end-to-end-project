@@ -3,6 +3,9 @@ import {ApiError} from "../utils/ApiError.js";
 import {ApiResponse} from "../utils/ApiResponse.js";
 import { Like } from "../models/likes.model.js";
 import mongoose from "mongoose";
+import { Video } from "../models/videos.model.js";
+import { Comment } from "../models/comments.model.js";
+import { Tweet } from "../models/tweets.model.js";
 
 
 const toggleVideoLike = asyncHandler(async (req,res) => {
@@ -10,6 +13,12 @@ const toggleVideoLike = asyncHandler(async (req,res) => {
 
     if(! mongoose.Types.ObjectId.isValid(videoId)){
         throw new ApiError(400,"videoId is wrong");
+    }
+
+    const video = await Video.findById(videoId);
+    
+    if(!video){
+        throw new ApiError(400,"video does not exists");
     }
 
     const deleteLike = await Like.findOneAndDelete({
@@ -55,6 +64,12 @@ const toggleCommentike = asyncHandler(async (req,res) => {
         throw new ApiError(400,"commentId is wrong");
     }
 
+    const comment = await Comment.findById(commentId);
+    
+    if(!comment){
+        throw new ApiError(400,"comment does not exists");
+    }
+
     const deleteLike = await Like.findOneAndDelete({
         comment:commentId,
         likedBy:req.user._id
@@ -96,6 +111,12 @@ const toggleTweetLike = asyncHandler(async (req,res) => {
 
     if(! mongoose.Types.ObjectId.isValid(tweetId)){
         throw new ApiError(400,"tweetId is wrong");
+    }
+
+    const tweet = await Tweet.findById(tweetId);
+    
+    if(!tweet){
+        throw new ApiError(400,"tweet does not exists");
     }
 
     const deleteLike = await Like.findOneAndDelete({
