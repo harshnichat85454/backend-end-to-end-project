@@ -1,4 +1,4 @@
-import { createContext, useEffect, useState } from "react";
+import { createContext, useCallback, useEffect, useState } from "react";
 import { getCurrentUser } from "../api/auth.api";
 
 const AuthContext = createContext(null);
@@ -7,23 +7,24 @@ const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const fetchUser = async () => {
-      try {
-        const res = await getCurrentUser();
-        setUser(res.data.data);
-      } catch (error) {
-        setUser(null);
-        console.log(error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchUser();
+  const refreshUser = useCallback(async () => {
+    try {
+      const res = await getCurrentUser();
+      setUser(res.data.data);
+    } catch (error) {
+      setUser(null);
+      console.log(error);
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
+  useEffect(() => {
+    refreshUser();
+  }, [refreshUser]);
+
   return (
-    <AuthContext.Provider value={{ user, setUser, loading }}>
+    <AuthContext.Provider value={{ user, setUser, loading, refreshUser }}>
       {!loading && children}
     </AuthContext.Provider>
   );
